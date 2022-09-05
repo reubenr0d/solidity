@@ -975,6 +975,28 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
 	BOOST_CHECK_EQUAL(pushTags.size(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(peephole_static_truthy_comparison)
+{
+	AssemblyItems items{
+		Instruction::ISZERO,
+		Instruction::ISZERO,
+		u256(1),
+		Instruction::EQ,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	AssemblyItems expectation{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	PeepholeOptimiser peepOpt(items);
+	BOOST_REQUIRE(peepOpt.optimise());
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
 BOOST_AUTO_TEST_CASE(clear_unreachable_code)
 {
 	AssemblyItems items{

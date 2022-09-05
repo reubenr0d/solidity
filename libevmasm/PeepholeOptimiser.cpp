@@ -428,6 +428,25 @@ struct TruthyAnd: SimplePeepholeOptimizerMethod<TruthyAnd>
 	}
 };
 
+// a == true -> a
+struct TruthyBooleanComparison: SimplePeepholeOptimizerMethod<TruthyBooleanComparison>{
+	static bool applySimple(
+		AssemblyItem const& _iszero,
+		AssemblyItem const& _iszero1,
+		AssemblyItem const& _push,
+		AssemblyItem const& _eq,
+		std::back_insert_iterator<AssemblyItems>
+	)
+	{
+		return (
+			_iszero == Instruction::ISZERO &&
+			_iszero1 == Instruction::ISZERO &&
+			_push.type() == Push && _push.data() == 1 &&
+			_eq == Instruction::EQ
+		);
+	}
+};
+
 /// Removes everything after a JUMP (or similar) until the next JUMPDEST.
 struct UnreachableCode
 {
@@ -490,7 +509,7 @@ bool PeepholeOptimiser::optimise()
 			state,
 			PushPop(), OpPop(), OpStop(), OpReturnRevert(), DoublePush(), DoubleSwap(), CommutativeSwap(), SwapComparison(),
 			DupSwap(), IsZeroIsZeroJumpI(), EqIsZeroJumpI(), DoubleJump(), JumpToNext(), UnreachableCode(),
-			TagConjunctions(), TruthyAnd(), Identity()
+			TagConjunctions(), TruthyAnd(), Identity(), TruthyBooleanComparison()
 		);
 	if (m_optimisedItems.size() < m_items.size() || (
 		m_optimisedItems.size() == m_items.size() && (
